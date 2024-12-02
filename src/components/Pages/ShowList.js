@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const ShowList = () => {
-  const [books, setBooks] = useState([]);
-  const [error, setError] = useState("");
+  const [books, setBooks] = useState([]); // 도서 데이터를 저장할 상태
+  const [error, setError] = useState(null); // 오류 메시지를 저장할 상태
 
   useEffect(() => {
     const fetchData = async () => {
@@ -11,12 +11,21 @@ const ShowList = () => {
         console.log("Fetching books from API...");
         const response = await axios.get("/api/books"); // API 호출
         const xmlData = response.data; // XML 데이터
-        console.log("API Response:", xmlData);
+        console.log("Raw API Response:", xmlData);
 
-        // XML 데이터를 JSON으로 변환
         const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlData, "text/xml");
+        const xmlDoc = parser.parseFromString(xmlData, "application/xml");
+
+        // 오류가 있으면 처리
+        const resultCode = xmlDoc.getElementsByTagName("CODE")[0]?.textContent;
+        if (resultCode !== "INFO-000") {
+          throw new Error(
+            xmlDoc.getElementsByTagName("MESSAGE")[0]?.textContent || "API Error"
+          );
+        }
+
         const rows = xmlDoc.getElementsByTagName("row");
+        console.log("Extracted Rows:", rows);
 
         // 데이터를 배열로 변환
         const bookArray = Array.from(rows).map((row) => ({
@@ -37,18 +46,18 @@ const ShowList = () => {
     fetchData();
   }, []);
 
-  if (error) {
-    return <div>{error}</div>;
-  }
-
   return (
     <div>
       <h1>도서 리스트</h1>
-      {Array.isArray(books) && books.length > 0 ? (
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {books.length > 0 ? (
         <ul>
           {books.map((book, index) => (
             <li key={index}>
-              <strong>{book.title}</strong> - {book.author} ({book.publisher})
+              <strong>제목:</strong> {book.title} <br />
+              <strong>저자:</strong> {book.author} <br />
+              <strong>출판사:</strong> {book.publisher} <br />
+              <strong>청구기호:</strong> {book.callNumber}
             </li>
           ))}
         </ul>

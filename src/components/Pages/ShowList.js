@@ -7,7 +7,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterType, setFilterType] = useState("TITLE");
-  const [sortOrder, setSortOrder] = useState("CTRLNO"); // 기본 정렬: 자료코드 순
+  const [sortOrder, setSortOrder] = useState("CTRLNO"); // 기본값: 자료코드 순
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -16,11 +16,13 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   const navigate = useNavigate();
   const itemsPerPage = 20;
 
+  // 데이터 로드
   useEffect(() => {
     const fetchBooks = async () => {
       try {
         setLoading(true);
         setError(null);
+
         const response = await axios.get("/api/books");
         const xmlData = response.data;
 
@@ -59,6 +61,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
     fetchBooks();
   }, []);
 
+  // 필터링 및 정렬
   useEffect(() => {
     if (!books || books.length === 0) return;
 

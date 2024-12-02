@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const ShowList = () => {
-  const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [books, setBooks] = useState([]); // 도서 데이터를 저장
+  const [loading, setLoading] = useState(true); // 로딩 상태
+  const [error, setError] = useState(null); // 에러 상태
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -13,6 +13,7 @@ const ShowList = () => {
         const response = await axios.get("/api/books"); // Vercel Serverless Function 호출
         console.log("API Response:", response.data);
 
+        // XML 데이터 파싱
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(response.data, "application/xml");
         const items = Array.from(xmlDoc.getElementsByTagName("row")).map((item) => ({
@@ -22,7 +23,7 @@ const ShowList = () => {
           PUBLER: item.getElementsByTagName("PUBLER")[0]?.textContent || "",
         }));
 
-        setBooks(items); // 데이터 상태에 저장
+        setBooks(items); // 데이터 저장
         setLoading(false);
       } catch (err) {
         console.error("Error fetching data from API:", err);

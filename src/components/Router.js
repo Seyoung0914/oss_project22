@@ -1,9 +1,9 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import ShowList from "./Pages/ShowList";
-import CartList from "./Pages/CartList";
-import Detail from "./Pages/Detail";
-import RentalList from "./Pages/RentalList";
+import ShowList from "./Pages/ShowList.js";
+import CartList from "./Pages/CartList.js";
+import Detail from "./Pages/Detail.js";
+import RentalList from "./Pages/RentalList.js";
 
 const Router = () => {
   return (

@@ -20,10 +20,10 @@ const ShowList = () => {
 
         // 데이터를 배열로 변환
         const bookArray = Array.from(rows).map((row) => ({
-          title: row.getElementsByTagName("TITLE")[0].textContent,
-          author: row.getElementsByTagName("AUTHOR")[0].textContent,
-          publisher: row.getElementsByTagName("PUBLER")[0].textContent,
-          callNumber: row.getElementsByTagName("CALL_NO")[0].textContent,
+          title: row.getElementsByTagName("TITLE")[0]?.textContent || "제목 없음",
+          author: row.getElementsByTagName("AUTHOR")[0]?.textContent || "저자 없음",
+          publisher: row.getElementsByTagName("PUBLER")[0]?.textContent || "출판사 없음",
+          callNumber: row.getElementsByTagName("CALL_NO")[0]?.textContent || "청구기호 없음",
         }));
 
         console.log("Parsed Books:", bookArray);
@@ -44,7 +44,7 @@ const ShowList = () => {
   return (
     <div>
       <h1>도서 리스트</h1>
-      {books.length > 0 ? (
+      {Array.isArray(books) && books.length > 0 ? (
         <ul>
           {books.map((book, index) => (
             <li key={index}>
@@ -53,7 +53,7 @@ const ShowList = () => {
           ))}
         </ul>
       ) : (
-        <p>데이터를 불러오는 중입니다...</p>
+        <p>데이터가 없습니다.</p>
       )}
     </div>
   );

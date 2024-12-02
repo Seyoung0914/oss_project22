@@ -7,7 +7,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterType, setFilterType] = useState("TITLE");
-  const [sortOrder, setSortOrder] = useState("CTRLNO"); // 기본값: 자료코드 순
+  const [sortType, setSortType] = useState("CTRLNO"); // 기본 정렬: 자료코드 순
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -16,13 +16,11 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   const navigate = useNavigate();
   const itemsPerPage = 20;
 
-  // 데이터 로드
   useEffect(() => {
     const fetchBooks = async () => {
       try {
         setLoading(true);
         setError(null);
-
         const response = await axios.get("/api/books");
         const xmlData = response.data;
 
@@ -43,7 +41,8 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
           AUTHOR: row.getElementsByTagName("AUTHOR")[0]?.textContent || "저자 없음",
           PUBLER: row.getElementsByTagName("PUBLER")[0]?.textContent || "출판사 없음",
           PUBLER_YEAR: parseInt(
-            row.getElementsByTagName("PUBLER_YEAR")[0]?.textContent || "0"
+            row.getElementsByTagName("PUBLER_YEAR")[0]?.textContent || "0",
+            10
           ),
           AVAILABLE: "대여 가능",
         }));
@@ -61,39 +60,35 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
     fetchBooks();
   }, []);
 
-  // 필터링 및 정렬
   useEffect(() => {
     if (!books || books.length === 0) return;
 
     let updatedBooks = books;
 
-    // 검색 필터 적용
     if (searchKeyword) {
       updatedBooks = updatedBooks.filter((book) =>
         book[filterType]?.toLowerCase().includes(searchKeyword.toLowerCase())
       );
     }
 
-    // 대여 가능 여부 필터
     if (showAvailableOnly) {
       updatedBooks = updatedBooks.filter(
         (book) => book.AVAILABLE === "대여 가능"
       );
     }
 
-    // 정렬 기준 적용
-    if (sortOrder === "TITLE") {
+    if (sortType === "TITLE") {
       updatedBooks.sort((a, b) =>
         a.TITLE.localeCompare(b.TITLE, "ko", { sensitivity: "base" })
       );
-    } else if (sortOrder === "CTRLNO") {
-      updatedBooks.sort((a, b) => a.CTRLNO.localeCompare(b.CTRLNO));
-    } else if (sortOrder === "PUBLER_YEAR") {
+    } else if (sortType === "PUBLER_YEAR") {
       updatedBooks.sort((a, b) => a.PUBLER_YEAR - b.PUBLER_YEAR);
+    } else {
+      updatedBooks.sort((a, b) => a.CTRLNO.localeCompare(b.CTRLNO, "ko", { sensitivity: "base" }));
     }
 
     setFilteredBooks(updatedBooks);
-  }, [searchKeyword, filterType, showAvailableOnly, sortOrder, books]);
+  }, [books, searchKeyword, filterType, showAvailableOnly, sortType]);
 
   const displayedBooks = filteredBooks.slice(
     (currentPage - 1) * itemsPerPage,
@@ -132,13 +127,12 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
             <option value="PUBLER">출판사</option>
           </select>
           <select
-            onChange={(e) => setSortOrder(e.target.value)}
-            value={sortOrder}
-            style={{ marginLeft: "10px" }}
+            onChange={(e) => setSortType(e.target.value)}
+            value={sortType}
           >
             <option value="CTRLNO">자료코드 순</option>
             <option value="TITLE">책 제목 가나다순</option>
-            <option value="PUBLER_YEAR">연도 순</option>
+            <option value="PUBLER_YEAR">출판 연도 순</option>
           </select>
           <label style={{ marginLeft: "10px" }}>
             <input

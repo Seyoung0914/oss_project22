@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ShowList from "./Pages/ShowList";
 import CartList from "./Pages/CartList";
 import Detail from "./Pages/Detail";
-import RentalList from "./User/RentalList";
+import RentalList from "./Pages/RentalList";
 
 export default function Router() {
   return (

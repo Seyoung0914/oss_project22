@@ -16,7 +16,7 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
       try {
         console.log("Fetching books from API...");
         const response = await axios.get(
-          "https://openapi.seoul.go.kr:8088/58624c767a63796c37386a42726a66/xml/SeoulLibraryBookSearchInfo/1/999"
+          "/58624c767a63796c37386a42726a66/xml/SeoulLibraryBookSearchInfo/1/999"
         );
 
         console.log("API Response:", response.data);

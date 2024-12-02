@@ -3,41 +3,58 @@ import axios from "axios";
 
 const ShowList = () => {
   const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchBooks = async () => {
+    const fetchData = async () => {
       try {
-        console.log("Fetching books from Serverless Function...");
-        const response = await axios.get("/api/books"); // Vercel Serverless Function 호출
-        console.log("API Response:", response.data);
-        // XML을 JSON으로 변환하거나 파싱 필요
-        setBooks(response.data); // 필요 시 XML 파싱 추가
-        setLoading(false);
+        console.log("Fetching books from API...");
+        const response = await axios.get("/api/books"); // API 호출
+        const xmlData = response.data; // XML 데이터
+        console.log("API Response:", xmlData);
+
+        // XML 데이터를 JSON으로 변환
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlData, "text/xml");
+        const rows = xmlDoc.getElementsByTagName("row");
+
+        // 데이터를 배열로 변환
+        const bookArray = Array.from(rows).map((row) => ({
+          title: row.getElementsByTagName("TITLE")[0].textContent,
+          author: row.getElementsByTagName("AUTHOR")[0].textContent,
+          publisher: row.getElementsByTagName("PUBLER")[0].textContent,
+          callNumber: row.getElementsByTagName("CALL_NO")[0].textContent,
+        }));
+
+        console.log("Parsed Books:", bookArray);
+        setBooks(bookArray);
       } catch (err) {
-        console.error("Error fetching data:", err.message);
+        console.error("Error fetching data:", err);
         setError("데이터를 가져오는 중 오류가 발생했습니다.");
-        setLoading(false);
       }
     };
 
-    fetchBooks();
+    fetchData();
   }, []);
 
-  if (loading) return <p>데이터를 불러오는 중입니다...</p>;
-  if (error) return <p>{error}</p>;
+  if (error) {
+    return <div>{error}</div>;
+  }
 
   return (
-    <div className="container">
+    <div>
       <h1>도서 리스트</h1>
-      {books.map((book, index) => (
-        <div key={index}>
-          <h3>{book.TITLE}</h3>
-          <p>저자: {book.AUTHOR}</p>
-          <p>출판사: {book.PUBLER}</p>
-        </div>
-      ))}
+      {books.length > 0 ? (
+        <ul>
+          {books.map((book, index) => (
+            <li key={index}>
+              <strong>{book.title}</strong> - {book.author} ({book.publisher})
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>데이터를 불러오는 중입니다...</p>
+      )}
     </div>
   );
 };

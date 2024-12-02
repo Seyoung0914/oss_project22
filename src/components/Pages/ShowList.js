@@ -14,9 +14,9 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
-
   const itemsPerPage = 20;
 
+  // 데이터 패칭
   useEffect(() => {
     const fetchBooks = async () => {
       try {
@@ -62,6 +62,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
     fetchBooks();
   }, []);
 
+  // 검색, 필터 및 정렬 처리
   useEffect(() => {
     if (!books || books.length === 0) return;
 
@@ -83,15 +84,19 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
 
     // 정렬 적용
     if (sortType === "TITLE_ASC") {
-      updatedBooks.sort((a, b) => a.TITLE.localeCompare(b.TITLE, "ko", { sensitivity: "base" }));
+      updatedBooks = updatedBooks.sort((a, b) =>
+        a.TITLE.localeCompare(b.TITLE, "ko", { sensitivity: "base" })
+      );
     } else if (sortType === "CTRLNO_ASC") {
-      updatedBooks.sort((a, b) => a.CTRLNO.localeCompare(b.CTRLNO, "ko", { sensitivity: "base" }));
+      updatedBooks = updatedBooks.sort((a, b) =>
+        a.CTRLNO.localeCompare(b.CTRLNO, "ko", { sensitivity: "base" })
+      );
     } else if (sortType === "PUBLER_YEAR_ASC") {
-      updatedBooks.sort((a, b) => a.PUBLER_YEAR - b.PUBLER_YEAR);
+      updatedBooks = updatedBooks.sort((a, b) => a.PUBLER_YEAR - b.PUBLER_YEAR);
     }
 
-    setFilteredBooks(updatedBooks);
-  }, [searchKeyword, filterType, showAvailableOnly, sortType, books]);
+    setFilteredBooks([...updatedBooks]); // 정렬된 값을 새로운 배열로 복사하여 저장
+  }, [books, searchKeyword, filterType, showAvailableOnly, sortType]);
 
   const displayedBooks = filteredBooks.slice(
     (currentPage - 1) * itemsPerPage,

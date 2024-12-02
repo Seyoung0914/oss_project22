@@ -18,39 +18,33 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
       try {
         setLoading(true);
         setError(null);
-
         console.log("Fetching books from API...");
+        const response = await axios.get(
+          "http://openapi.seoul.go.kr:8088/58624c767a63796c37386a42726a66/xml/SeoulLibraryBookSearchInfo/1/999"
+        );
 
-        // 환경에 따라 API 엔드포인트 결정
-        const apiUrl =
-          window.location.origin.includes("localhost")
-            ? "http://openapi.seoul.go.kr:8088/58624c767a63796c37386a42726a66/xml/SeoulLibraryBookSearchInfo/1/999"
-            : "/api/books";
-
-        const response = await axios.get(apiUrl);
-        const xmlData = response.data;
-
-        console.log("Raw API Response:", xmlData);
+        console.log("API Response:", response.data);
 
         // XML 데이터를 JSON으로 변환
         const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlData, "application/xml");
-        const rows = Array.from(xmlDoc.getElementsByTagName("row")).map((item) => ({
+        const xmlDoc = parser.parseFromString(response.data, "application/xml");
+        const rows = Array.from(xmlDoc.getElementsByTagName("row"));
+        const items = rows.map((item) => ({
           CTRLNO: item.getElementsByTagName("CTRLNO")[0]?.textContent,
-          TITLE: item.getElementsByTagName("TITLE")[0]?.textContent || "제목 없음",
-          AUTHOR: item.getElementsByTagName("AUTHOR")[0]?.textContent || "저자 없음",
-          PUBLER: item.getElementsByTagName("PUBLER")[0]?.textContent || "출판사 없음",
+          TITLE: item.getElementsByTagName("TITLE")[0]?.textContent,
+          AUTHOR: item.getElementsByTagName("AUTHOR")[0]?.textContent,
+          PUBLER: item.getElementsByTagName("PUBLER")[0]?.textContent,
           LANG_NAME: item.getElementsByTagName("LANG_NAME")[0]?.textContent || "기타",
         }));
 
-        console.log("Parsed Books:", rows);
+        console.log("Parsed Books:", items);
 
-        setBooks(rows); // 전체 도서 리스트 설정
-        setFilteredBooks(rows); // 필터링용 데이터 초기화
+        setBooks(items); // 전체 도서 리스트 설정
+        setFilteredBooks(items); // 필터링용 데이터 초기화
+        setLoading(false);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("데이터를 가져오는 중 오류가 발생했습니다.");
-      } finally {
         setLoading(false);
       }
     };
@@ -62,22 +56,28 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
   useEffect(() => {
     if (!books || books.length === 0) return;
 
+    console.log("Applying filters...");
+    console.log("Original Books:", books);
+
     let updatedBooks = books;
 
     if (searchKeyword) {
       updatedBooks = updatedBooks.filter((book) =>
         book.TITLE?.toLowerCase().includes(searchKeyword.toLowerCase())
       );
+      console.log("After Search Filter:", updatedBooks);
     }
 
     if (showAvailableOnly) {
       updatedBooks = updatedBooks.filter(
         (book) => !cart.some((item) => item.CTRLNO === book.CTRLNO)
       );
+      console.log("After Available Only Filter:", updatedBooks);
     }
 
     if (languageFilter) {
       updatedBooks = updatedBooks.filter((book) => book.LANG_NAME === languageFilter);
+      console.log("After Language Filter:", updatedBooks);
     }
 
     setFilteredBooks(updatedBooks);
@@ -90,6 +90,7 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
   );
 
   const changePage = (pageNumber) => {
+    console.log("Changing to Page:", pageNumber);
     setCurrentPage(pageNumber);
   };
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const ShowList = ({ cart, addToCart }) => {
+const ShowList = ({ cart = [], addToCart }) => {
   const [books, setBooks] = useState([]); // 전체 도서 데이터를 저장할 상태
   const [filteredBooks, setFilteredBooks] = useState([]); // 필터링된 도서
   const [searchKeyword, setSearchKeyword] = useState(""); // 검색어
@@ -10,8 +10,8 @@ const ShowList = ({ cart, addToCart }) => {
   const [currentPage, setCurrentPage] = useState(1); // 현재 페이지
   const [loading, setLoading] = useState(true); // 로딩 상태
   const [error, setError] = useState(null); // 에러 상태
+
   const itemsPerPage = 20; // 한 페이지에 표시할 항목 수
-  const [fetchRange, setFetchRange] = useState({ start: 1, end: 40 }); // 요청 범위 상태
 
   // 데이터 패칭
   useEffect(() => {
@@ -19,12 +19,8 @@ const ShowList = ({ cart, addToCart }) => {
       try {
         setLoading(true);
         setError(null);
-        console.log(`Fetching books from API with range ${fetchRange.start}-${fetchRange.end}...`);
-
-        const response = await axios.get(
-          `/api/books?start=${fetchRange.start}&end=${fetchRange.end}` // 서버리스 함수 호출
-        );
-
+        console.log("Fetching books from API...");
+        const response = await axios.get("/api/books"); // Vercel API 호출
         const xmlData = response.data; // XML 데이터
         console.log("Raw API Response:", xmlData);
 
@@ -64,7 +60,7 @@ const ShowList = ({ cart, addToCart }) => {
     };
 
     fetchBooks();
-  }, [fetchRange]); // fetchRange가 변경될 때마다 데이터를 다시 가져옵니다.
+  }, []);
 
   // 필터링 및 검색 적용
   useEffect(() => {
@@ -82,7 +78,7 @@ const ShowList = ({ cart, addToCart }) => {
       console.log("After Search Filter:", updatedBooks);
     }
 
-    if (showAvailableOnly) {
+    if (showAvailableOnly && cart.length > 0) {
       updatedBooks = updatedBooks.filter(
         (book) => !cart.some((item) => item.CTRLNO === book.CTRLNO)
       );
@@ -106,13 +102,6 @@ const ShowList = ({ cart, addToCart }) => {
   const changePage = (pageNumber) => {
     console.log("Changing to Page:", pageNumber);
     setCurrentPage(pageNumber);
-  };
-
-  const loadMoreBooks = () => {
-    setFetchRange((prev) => ({
-      start: prev.end + 1,
-      end: prev.end + 40 > 1000 ? 1000 : prev.end + 40, // 1000 범위 초과 방지
-    }));
   };
 
   if (loading) return <p>데이터를 불러오는 중입니다...</p>;
@@ -158,9 +147,9 @@ const ShowList = ({ cart, addToCart }) => {
               <button
                 className="btn btn-warning"
                 onClick={() => addToCart(book)}
-                disabled={cart.some((item) => item.CTRLNO === book.CTRLNO)}
+                disabled={cart?.some((item) => item.CTRLNO === book.CTRLNO)}
               >
-                {cart.some((item) => item.CTRLNO === book.CTRLNO)
+                {cart?.some((item) => item.CTRLNO === book.CTRLNO)
                   ? "장바구니에 있음"
                   : "장바구니 추가"}
               </button>
@@ -191,13 +180,6 @@ const ShowList = ({ cart, addToCart }) => {
           )
         )}
       </div>
-
-      {/* 더 보기 버튼 */}
-      {fetchRange.end < 1000 && (
-        <button onClick={loadMoreBooks} className="btn btn-primary">
-          더 많은 도서 불러오기
-        </button>
-      )}
     </div>
   );
 };

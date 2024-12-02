@@ -7,20 +7,25 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
   const [showAvailableOnly, setShowAvailableOnly] = useState(false); // 대여 가능만 보기
   const [languageFilter, setLanguageFilter] = useState(""); // 언어 필터
   const [currentPage, setCurrentPage] = useState(1); // 현재 페이지
+  const [loading, setLoading] = useState(true); // 로딩 상태
+  const [error, setError] = useState(null); // 에러 상태
 
   const itemsPerPage = 20; // 한 페이지에 표시할 항목 수
-  const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
 
+  // 데이터 패칭
   useEffect(() => {
     const fetchBooks = async () => {
       try {
+        setLoading(true);
+        setError(null);
         console.log("Fetching books from API...");
         const response = await axios.get(
-          "/58624c767a63796c37386a42726a66/xml/SeoulLibraryBookSearchInfo/1/999"
+          "http://openapi.seoul.go.kr:8088/58624c767a63796c37386a42726a66/xml/SeoulLibraryBookSearchInfo/1/999"
         );
 
         console.log("API Response:", response.data);
 
+        // XML 데이터를 JSON으로 변환
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(response.data, "application/xml");
         const items = Array.from(xmlDoc.getElementsByTagName("row")).map((item) => ({
@@ -35,44 +40,61 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
 
         setBooks(items); // 전체 도서 리스트 설정
         setFilteredBooks(items); // 필터링용 데이터 초기화
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError(err.message);
+        setLoading(false);
       }
     };
 
     fetchBooks();
   }, [setBooks]);
 
+  // 필터링 및 검색 적용
   useEffect(() => {
+    if (!books || books.length === 0) return;
+
+    console.log("Applying filters...");
+    console.log("Original Books:", books);
+
     let updatedBooks = books;
 
     if (searchKeyword) {
       updatedBooks = updatedBooks.filter((book) =>
         book.TITLE?.toLowerCase().includes(searchKeyword.toLowerCase())
       );
+      console.log("After Search Filter:", updatedBooks);
     }
 
     if (showAvailableOnly) {
       updatedBooks = updatedBooks.filter(
         (book) => !cart.some((item) => item.CTRLNO === book.CTRLNO)
       );
+      console.log("After Available Only Filter:", updatedBooks);
     }
 
     if (languageFilter) {
       updatedBooks = updatedBooks.filter((book) => book.LANG_NAME === languageFilter);
+      console.log("After Language Filter:", updatedBooks);
     }
 
     setFilteredBooks(updatedBooks);
   }, [books, searchKeyword, showAvailableOnly, languageFilter, cart]);
 
+  // 현재 페이지의 도서 데이터 가져오기
   const displayedBooks = filteredBooks.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
   const changePage = (pageNumber) => {
+    console.log("Changing to Page:", pageNumber);
     setCurrentPage(pageNumber);
   };
+
+  if (loading) return <p>데이터를 불러오는 중입니다...</p>;
+  if (error) return <p>오류 발생: {error}</p>;
 
   return (
     <div className="container">
@@ -114,7 +136,9 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
                 onClick={() => addToCart(book)}
                 disabled={cart.some((item) => item.CTRLNO === book.CTRLNO)}
               >
-                {cart.some((item) => item.CTRLNO === book.CTRLNO) ? "장바구니에 있음" : "장바구니 추가"}
+                {cart.some((item) => item.CTRLNO === book.CTRLNO)
+                  ? "장바구니에 있음"
+                  : "장바구니 추가"}
               </button>
               <button
                 className="btn btn-info"
@@ -125,20 +149,22 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
             </div>
           ))
         ) : (
-          <p>데이터가 없습니다.</p>
+          <p>도서 데이터가 없습니다.</p>
         )}
       </div>
 
       <div className="pagination">
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
-          <button
-            key={pageNumber}
-            className={`page-btn ${currentPage === pageNumber ? "active" : ""}`}
-            onClick={() => changePage(pageNumber)}
-          >
-            {pageNumber}
-          </button>
-        ))}
+        {Array.from({ length: Math.ceil(filteredBooks.length / itemsPerPage) }, (_, i) => i + 1).map(
+          (pageNumber) => (
+            <button
+              key={pageNumber}
+              className={`page-btn ${currentPage === pageNumber ? "active" : ""}`}
+              onClick={() => changePage(pageNumber)}
+            >
+              {pageNumber}
+            </button>
+          )
+        )}
       </div>
     </div>
   );

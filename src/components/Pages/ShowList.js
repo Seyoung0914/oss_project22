@@ -7,6 +7,8 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterType, setFilterType] = useState("TITLE");
+  const [sortType, setSortType] = useState("CTRLNO"); // 정렬 기준
+  const [languageFilter, setLanguageFilter] = useState(""); // 언어 필터
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -40,6 +42,8 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
           TITLE: row.getElementsByTagName("TITLE")[0]?.textContent || "제목 없음",
           AUTHOR: row.getElementsByTagName("AUTHOR")[0]?.textContent || "저자 없음",
           PUBLER: row.getElementsByTagName("PUBLER")[0]?.textContent || "출판사 없음",
+          PUBLER_YEAR: row.getElementsByTagName("PUBLER_YEAR")[0]?.textContent || "N/A",
+          LANG: row.getElementsByTagName("LANG")[0]?.textContent || "기타",
           AVAILABLE: "대여 가능",
         }));
 
@@ -73,8 +77,20 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
       );
     }
 
+    if (languageFilter) {
+      updatedBooks = updatedBooks.filter((book) => book.LANG === languageFilter);
+    }
+
+    if (sortType === "CTRLNO") {
+      updatedBooks.sort((a, b) => a.CTRLNO.localeCompare(b.CTRLNO));
+    } else if (sortType === "TITLE") {
+      updatedBooks.sort((a, b) => a.TITLE.localeCompare(b.TITLE));
+    } else if (sortType === "PUBLER_YEAR") {
+      updatedBooks.sort((a, b) => a.PUBLER_YEAR - b.PUBLER_YEAR);
+    }
+
     setFilteredBooks(updatedBooks);
-  }, [searchKeyword, filterType, showAvailableOnly, books]);
+  }, [searchKeyword, filterType, showAvailableOnly, languageFilter, sortType, books]);
 
   const displayedBooks = filteredBooks.slice(
     (currentPage - 1) * itemsPerPage,
@@ -104,6 +120,24 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
             <option value="TITLE">제목</option>
             <option value="AUTHOR">저자</option>
             <option value="PUBLER">출판사</option>
+          </select>
+          <select
+            onChange={(e) => setSortType(e.target.value)}
+            value={sortType}
+            style={{ marginLeft: "10px" }}
+          >
+            <option value="CTRLNO">자료코드 오름차순</option>
+            <option value="TITLE">책 제목 사전순</option>
+            <option value="PUBLER_YEAR">출판 연도 오름차순</option>
+          </select>
+          <select
+            onChange={(e) => setLanguageFilter(e.target.value)}
+            value={languageFilter}
+            style={{ marginLeft: "10px" }}
+          >
+            <option value="">모든 언어</option>
+            <option value="kor">한국어</option>
+            <option value="eng">영어</option>
           </select>
           <label style={{ marginLeft: "10px" }}>
             <input
@@ -146,9 +180,6 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
               <p>{`${book.AUTHOR} / ${book.PUBLER}`}</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <span style={{ color: book.AVAILABLE === "대여 가능" ? "green" : "red" }}>
-                {book.AVAILABLE}
-              </span>
               <div style={{ marginTop: "10px" }}>
                 <button
                   className="btn btn-warning"
@@ -167,6 +198,9 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
                   상세보기
                 </button>
               </div>
+              <span style={{ marginTop: "10px", color: book.AVAILABLE === "대여 가능" ? "green" : "red" }}>
+                {book.AVAILABLE}
+              </span>
             </div>
           </div>
         ))}

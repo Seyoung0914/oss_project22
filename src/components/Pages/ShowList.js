@@ -11,18 +11,16 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
   const itemsPerPage = 20; // 한 페이지에 표시할 항목 수
   const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
 
-  // 데이터 패칭
   useEffect(() => {
     const fetchBooks = async () => {
       try {
         console.log("Fetching books from API...");
         const response = await axios.get(
-          "http://openapi.seoul.go.kr:8088/58624c767a63796c37386a42726a66/xml/SeoulLibraryBookSearchInfo/1/999"
+          "https://openapi.seoul.go.kr:8088/58624c767a63796c37386a42726a66/xml/SeoulLibraryBookSearchInfo/1/999"
         );
 
         console.log("API Response:", response.data);
 
-        // XML 데이터를 JSON으로 변환
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(response.data, "application/xml");
         const items = Array.from(xmlDoc.getElementsByTagName("row")).map((item) => ({
@@ -45,49 +43,34 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
     fetchBooks();
   }, [setBooks]);
 
-  // 필터링 및 검색 적용
   useEffect(() => {
-    console.log("Applying filters...");
-    console.log("Original Books:", books);
-
     let updatedBooks = books;
 
-    // 검색 필터
     if (searchKeyword) {
       updatedBooks = updatedBooks.filter((book) =>
         book.TITLE?.toLowerCase().includes(searchKeyword.toLowerCase())
       );
-      console.log("After Search Filter:", updatedBooks);
     }
 
-    // 대여 가능 필터 (장바구니에 없는 도서만 보기)
     if (showAvailableOnly) {
       updatedBooks = updatedBooks.filter(
         (book) => !cart.some((item) => item.CTRLNO === book.CTRLNO)
       );
-      console.log("After Available Only Filter:", updatedBooks);
     }
 
-    // 언어 필터
     if (languageFilter) {
       updatedBooks = updatedBooks.filter((book) => book.LANG_NAME === languageFilter);
-      console.log("After Language Filter:", updatedBooks);
     }
 
     setFilteredBooks(updatedBooks);
   }, [books, searchKeyword, showAvailableOnly, languageFilter, cart]);
 
-  // 현재 페이지의 도서 데이터 가져오기
   const displayedBooks = filteredBooks.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  console.log("Displayed Books:", displayedBooks);
-
-  // 페이지 변경
   const changePage = (pageNumber) => {
-    console.log("Changing to Page:", pageNumber);
     setCurrentPage(pageNumber);
   };
 
@@ -95,7 +78,6 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
     <div className="container">
       <h1>도서 리스트</h1>
 
-      {/* 검색 및 필터링 */}
       <div className="filters">
         <input
           type="text"
@@ -122,29 +104,31 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
         </label>
       </div>
 
-      {/* 도서 리스트 */}
       <div id="data-list">
-        {displayedBooks.map((book) => (
-          <div key={book.CTRLNO} className="book-item">
-            <span>{`${book.TITLE} - ${book.AUTHOR} (${book.PUBLER})`}</span>
-            <button
-              className="btn btn-warning"
-              onClick={() => addToCart(book)}
-              disabled={cart.some((item) => item.CTRLNO === book.CTRLNO)}
-            >
-              {cart.some((item) => item.CTRLNO === book.CTRLNO) ? "장바구니에 있음" : "장바구니 추가"}
-            </button>
-            <button
-              className="btn btn-info"
-              onClick={() => alert(`상세정보: ${book.TITLE}`)}
-            >
-              상세보기
-            </button>
-          </div>
-        ))}
+        {filteredBooks?.length > 0 ? (
+          displayedBooks.map((book) => (
+            <div key={book.CTRLNO} className="book-item">
+              <span>{`${book.TITLE} - ${book.AUTHOR} (${book.PUBLER})`}</span>
+              <button
+                className="btn btn-warning"
+                onClick={() => addToCart(book)}
+                disabled={cart.some((item) => item.CTRLNO === book.CTRLNO)}
+              >
+                {cart.some((item) => item.CTRLNO === book.CTRLNO) ? "장바구니에 있음" : "장바구니 추가"}
+              </button>
+              <button
+                className="btn btn-info"
+                onClick={() => alert(`상세정보: ${book.TITLE}`)}
+              >
+                상세보기
+              </button>
+            </div>
+          ))
+        ) : (
+          <p>데이터가 없습니다.</p>
+        )}
       </div>
 
-      {/* 페이지네이션 */}
       <div className="pagination">
         {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
           <button

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const ShowList = ({ books, setBooks, cart, addToCart }) => {
+const ShowList = ({ cart, addToCart }) => {
+  const [books, setBooks] = useState([]); // 전체 도서 데이터를 저장할 상태
   const [filteredBooks, setFilteredBooks] = useState([]); // 필터링된 도서
   const [searchKeyword, setSearchKeyword] = useState(""); // 검색어
   const [showAvailableOnly, setShowAvailableOnly] = useState(false); // 대여 가능만 보기
@@ -19,28 +20,37 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
         setLoading(true);
         setError(null);
         console.log("Fetching books from API...");
-        const response = await axios.get(
-          "http://openapi.seoul.go.kr:8088/58624c767a63796c37386a42726a66/xml/SeoulLibraryBookSearchInfo/1/999"
-        );
+        const response = await axios.get("/api/books"); // Vercel API 호출
+        const xmlData = response.data; // XML 데이터
+        console.log("Raw API Response:", xmlData);
 
-        console.log("API Response:", response.data);
-
-        // XML 데이터를 JSON으로 변환
         const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(response.data, "application/xml");
-        const rows = Array.from(xmlDoc.getElementsByTagName("row"));
-        const items = rows.map((item) => ({
-          CTRLNO: item.getElementsByTagName("CTRLNO")[0]?.textContent,
-          TITLE: item.getElementsByTagName("TITLE")[0]?.textContent,
-          AUTHOR: item.getElementsByTagName("AUTHOR")[0]?.textContent,
-          PUBLER: item.getElementsByTagName("PUBLER")[0]?.textContent,
-          LANG_NAME: item.getElementsByTagName("LANG_NAME")[0]?.textContent || "기타",
+        const xmlDoc = parser.parseFromString(xmlData, "application/xml");
+
+        // 오류가 있으면 처리
+        const resultCode = xmlDoc.getElementsByTagName("CODE")[0]?.textContent;
+        if (resultCode !== "INFO-000") {
+          throw new Error(
+            xmlDoc.getElementsByTagName("MESSAGE")[0]?.textContent || "API Error"
+          );
+        }
+
+        const rows = xmlDoc.getElementsByTagName("row");
+        console.log("Extracted Rows:", rows);
+
+        // 데이터를 배열로 변환
+        const bookArray = Array.from(rows).map((row) => ({
+          CTRLNO: row.getElementsByTagName("CTRLNO")[0]?.textContent || "N/A",
+          TITLE: row.getElementsByTagName("TITLE")[0]?.textContent || "제목 없음",
+          AUTHOR: row.getElementsByTagName("AUTHOR")[0]?.textContent || "저자 없음",
+          PUBLER: row.getElementsByTagName("PUBLER")[0]?.textContent || "출판사 없음",
+          LANG_NAME: row.getElementsByTagName("LANG_NAME")[0]?.textContent || "기타",
         }));
 
-        console.log("Parsed Books:", items);
+        console.log("Parsed Books:", bookArray);
 
-        setBooks(items); // 전체 도서 리스트 설정
-        setFilteredBooks(items); // 필터링용 데이터 초기화
+        setBooks(bookArray); // 전체 도서 리스트 설정
+        setFilteredBooks(bookArray); // 필터링용 데이터 초기화
         setLoading(false);
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -50,7 +60,7 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
     };
 
     fetchBooks();
-  }, [setBooks]);
+  }, []);
 
   // 필터링 및 검색 적용
   useEffect(() => {
@@ -101,6 +111,7 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
     <div className="container">
       <h1>도서 리스트</h1>
 
+      {/* 필터 섹션 */}
       <div className="filters">
         <input
           type="text"
@@ -127,6 +138,7 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
         </label>
       </div>
 
+      {/* 도서 리스트 */}
       <div id="data-list">
         {filteredBooks?.length > 0 ? (
           displayedBooks.map((book) => (
@@ -154,6 +166,7 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
         )}
       </div>
 
+      {/* 페이지네이션 */}
       <div className="pagination">
         {Array.from({ length: Math.ceil(filteredBooks.length / itemsPerPage) }, (_, i) => i + 1).map(
           (pageNumber) => (

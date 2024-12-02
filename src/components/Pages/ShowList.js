@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const ShowList = ({ cart, addToCart }) => {
-  const [books, setBooks] = useState([]); // 전체 도서 데이터를 저장할 상태
-  const [filteredBooks, setFilteredBooks] = useState([]); // 필터링된 도서
-  const [searchKeyword, setSearchKeyword] = useState(""); // 검색어
-  const [filterType, setFilterType] = useState("TITLE"); // 검색 필터 (제목, 저자, 출판사)
-  const [showAvailableOnly, setShowAvailableOnly] = useState(false); // 대여 가능만 보기
-  const [currentPage, setCurrentPage] = useState(1); // 현재 페이지
-  const [loading, setLoading] = useState(true); // 로딩 상태
-  const [error, setError] = useState(null); // 에러 상태
+const ShowList = ({ cart = [], addToCart = () => {} }) => {
+  const [books, setBooks] = useState([]);
+  const [filteredBooks, setFilteredBooks] = useState([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filterType, setFilterType] = useState("TITLE");
+  const [showAvailableOnly, setShowAvailableOnly] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const itemsPerPage = 20; // 한 페이지에 표시할 항목 수
+  const itemsPerPage = 20;
 
-  // 데이터 패칭
   useEffect(() => {
     const fetchBooks = async () => {
       try {
@@ -38,7 +37,7 @@ const ShowList = ({ cart, addToCart }) => {
           TITLE: row.getElementsByTagName("TITLE")[0]?.textContent || "제목 없음",
           AUTHOR: row.getElementsByTagName("AUTHOR")[0]?.textContent || "저자 없음",
           PUBLER: row.getElementsByTagName("PUBLER")[0]?.textContent || "출판사 없음",
-          AVAILABLE: "대여 가능", // 대여 가능 여부를 기본값으로 설정
+          AVAILABLE: "대여 가능", // 기본값 설정
         }));
 
         setBooks(bookArray);
@@ -54,7 +53,6 @@ const ShowList = ({ cart, addToCart }) => {
     fetchBooks();
   }, []);
 
-  // 필터링 및 검색
   useEffect(() => {
     if (!books || books.length === 0) return;
 
@@ -121,33 +119,35 @@ const ShowList = ({ cart, addToCart }) => {
 
       <div id="data-list">
         {displayedBooks.map((book) => (
-          <div key={book.CTRLNO} className="book-item" style={{ borderBottom: "1px solid #ccc", padding: "10px 0" }}>
+          <div key={book.CTRLNO} className="book-item">
+            <hr />
             <div>
               <strong>{book.TITLE}</strong>
-              <br />
-              {book.AUTHOR} / {book.PUBLER}
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ color: book.AVAILABLE === "대여 가능" ? "green" : "red" }}>
+              <p>{`${book.AUTHOR} / ${book.PUBLER}`}</p>
+              <span
+                style={{
+                  color: book.AVAILABLE === "대여 가능" ? "green" : "red",
+                }}
+              >
                 {book.AVAILABLE}
               </span>
-              <div>
-                <button
-                  className="btn btn-warning"
-                  onClick={() => addToCart(book)}
-                  disabled={cart.some((item) => item.CTRLNO === book.CTRLNO)}
-                >
-                  {cart.some((item) => item.CTRLNO === book.CTRLNO)
-                    ? "장바구니에 있음"
-                    : "장바구니 추가"}
-                </button>
-                <button
-                  className="btn btn-info"
-                  onClick={() => alert(`상세보기: ${book.TITLE}`)}
-                >
-                  상세보기
-                </button>
-              </div>
+            </div>
+            <div>
+              <button
+                className="btn btn-warning"
+                onClick={() => addToCart(book)}
+                disabled={cart.some((item) => item.CTRLNO === book.CTRLNO)}
+              >
+                {cart.some((item) => item.CTRLNO === book.CTRLNO)
+                  ? "장바구니에 있음"
+                  : "장바구니 추가"}
+              </button>
+              <button
+                className="btn btn-info"
+                onClick={() => alert(`상세보기: ${book.TITLE}`)}
+              >
+                상세보기
+              </button>
             </div>
           </div>
         ))}

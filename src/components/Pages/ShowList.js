@@ -42,7 +42,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
           PUBLER: row.getElementsByTagName("PUBLER")[0]?.textContent || "출판사 없음",
           PUBLER_YEAR: parseInt(
             row.getElementsByTagName("PUBLER_YEAR")[0]?.textContent || "0"
-          ), // 연도 추가
+          ),
           AVAILABLE: "대여 가능",
         }));
 

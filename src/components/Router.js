@@ -9,7 +9,7 @@ export default function Router() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/list" replace />} />
+        <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/home" element={<ShowList />} />
         <Route path="/book" element={<Detail />} />
         <Route path="/cart" element={<CartList />} />

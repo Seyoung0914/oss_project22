@@ -7,14 +7,13 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterType, setFilterType] = useState("TITLE");
-  const [sortOrder, setSortOrder] = useState("CTRLNO"); // 기본 정렬 기준
+  const [sortOrder, setSortOrder] = useState("CTRLNO"); // 기본 정렬: 자료코드 순
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
-
   const itemsPerPage = 20;
 
   useEffect(() => {
@@ -41,6 +40,9 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
           TITLE: row.getElementsByTagName("TITLE")[0]?.textContent || "제목 없음",
           AUTHOR: row.getElementsByTagName("AUTHOR")[0]?.textContent || "저자 없음",
           PUBLER: row.getElementsByTagName("PUBLER")[0]?.textContent || "출판사 없음",
+          PUBLER_YEAR: parseInt(
+            row.getElementsByTagName("PUBLER_YEAR")[0]?.textContent || "0"
+          ), // 연도 추가
           AVAILABLE: "대여 가능",
         }));
 
@@ -62,25 +64,29 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
 
     let updatedBooks = books;
 
+    // 검색 필터 적용
     if (searchKeyword) {
       updatedBooks = updatedBooks.filter((book) =>
         book[filterType]?.toLowerCase().includes(searchKeyword.toLowerCase())
       );
     }
 
+    // 대여 가능 여부 필터
     if (showAvailableOnly) {
       updatedBooks = updatedBooks.filter(
         (book) => book.AVAILABLE === "대여 가능"
       );
     }
 
-    // 정렬 기준에 따른 정렬
+    // 정렬 기준 적용
     if (sortOrder === "TITLE") {
-      updatedBooks = updatedBooks.sort((a, b) =>
+      updatedBooks.sort((a, b) =>
         a.TITLE.localeCompare(b.TITLE, "ko", { sensitivity: "base" })
       );
     } else if (sortOrder === "CTRLNO") {
-      updatedBooks = updatedBooks.sort((a, b) => a.CTRLNO.localeCompare(b.CTRLNO));
+      updatedBooks.sort((a, b) => a.CTRLNO.localeCompare(b.CTRLNO));
+    } else if (sortOrder === "PUBLER_YEAR") {
+      updatedBooks.sort((a, b) => a.PUBLER_YEAR - b.PUBLER_YEAR);
     }
 
     setFilteredBooks(updatedBooks);
@@ -99,7 +105,14 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   return (
     <div className="container">
       <h1>도서 리스트</h1>
-      <div className="filters" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div
+        className="filters"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <div>
           <input
             type="text"
@@ -122,6 +135,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
           >
             <option value="CTRLNO">자료코드 순</option>
             <option value="TITLE">책 제목 가나다순</option>
+            <option value="PUBLER_YEAR">연도 순</option>
           </select>
           <label style={{ marginLeft: "10px" }}>
             <input
@@ -140,7 +154,10 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
           >
             장바구니 보기
           </button>
-          <button className="btn btn-secondary" onClick={() => navigate("/rental")}>
+          <button
+            className="btn btn-secondary"
+            onClick={() => navigate("/rental")}
+          >
             대여 리스트 보기
           </button>
         </div>
@@ -163,8 +180,18 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
               <strong>{book.TITLE}</strong>
               <p>{`${book.AUTHOR} / ${book.PUBLER}`}</p>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <span style={{ color: book.AVAILABLE === "대여 가능" ? "green" : "red" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <span
+                style={{
+                  color: book.AVAILABLE === "대여 가능" ? "green" : "red",
+                }}
+              >
                 {book.AVAILABLE}
               </span>
               <div style={{ marginTop: "10px" }}>
@@ -191,17 +218,20 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
       </div>
 
       <div className="pagination">
-        {Array.from({ length: Math.ceil(filteredBooks.length / itemsPerPage) }, (_, i) => i + 1).map(
-          (pageNumber) => (
-            <button
-              key={pageNumber}
-              className={`page-btn ${currentPage === pageNumber ? "active" : ""}`}
-              onClick={() => changePage(pageNumber)}
-            >
-              {pageNumber}
-            </button>
-          )
-        )}
+        {Array.from(
+          { length: Math.ceil(filteredBooks.length / itemsPerPage) },
+          (_, i) => i + 1
+        ).map((pageNumber) => (
+          <button
+            key={pageNumber}
+            className={`page-btn ${
+              currentPage === pageNumber ? "active" : ""
+            }`}
+            onClick={() => changePage(pageNumber)}
+          >
+            {pageNumber}
+          </button>
+        ))}
       </div>
     </div>
   );

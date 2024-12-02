@@ -15,9 +15,12 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
+        console.log("Fetching books from API...");
         const response = await axios.get(
           "http://openapi.seoul.go.kr:8088/58624c767a63796c37386a42726a66/xml/SeoulLibraryBookSearchInfo/1/999"
         );
+
+        console.log("API Response:", response.data);
 
         // XML 데이터를 JSON으로 변환
         const parser = new DOMParser();
@@ -29,6 +32,8 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
           PUBLER: item.getElementsByTagName("PUBLER")[0]?.textContent,
           LANG_NAME: item.getElementsByTagName("LANG_NAME")[0]?.textContent || "기타",
         }));
+
+        console.log("Parsed Books:", items);
 
         setBooks(items); // 전체 도서 리스트 설정
         setFilteredBooks(items); // 필터링용 데이터 초기화
@@ -42,13 +47,17 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
 
   // 필터링 및 검색 적용
   useEffect(() => {
+    console.log("Applying filters...");
+    console.log("Original Books:", books);
+
     let updatedBooks = books;
 
     // 검색 필터
     if (searchKeyword) {
       updatedBooks = updatedBooks.filter((book) =>
-        book.TITLE.toLowerCase().includes(searchKeyword.toLowerCase())
+        book.TITLE?.toLowerCase().includes(searchKeyword.toLowerCase())
       );
+      console.log("After Search Filter:", updatedBooks);
     }
 
     // 대여 가능 필터 (장바구니에 없는 도서만 보기)
@@ -56,11 +65,13 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
       updatedBooks = updatedBooks.filter(
         (book) => !cart.some((item) => item.CTRLNO === book.CTRLNO)
       );
+      console.log("After Available Only Filter:", updatedBooks);
     }
 
     // 언어 필터
     if (languageFilter) {
       updatedBooks = updatedBooks.filter((book) => book.LANG_NAME === languageFilter);
+      console.log("After Language Filter:", updatedBooks);
     }
 
     setFilteredBooks(updatedBooks);
@@ -72,8 +83,11 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
     currentPage * itemsPerPage
   );
 
+  console.log("Displayed Books:", displayedBooks);
+
   // 페이지 변경
   const changePage = (pageNumber) => {
+    console.log("Changing to Page:", pageNumber);
     setCurrentPage(pageNumber);
   };
 
@@ -122,7 +136,7 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
             </button>
             <button
               className="btn btn-info"
-              onClick={() => alert(`상세정보: ${book.TITLE}`)} // 상세보기 페이지로 연결 필요
+              onClick={() => alert(`상세정보: ${book.TITLE}`)}
             >
               상세보기
             </button>

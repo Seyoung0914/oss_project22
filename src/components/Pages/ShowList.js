@@ -7,13 +7,14 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterType, setFilterType] = useState("TITLE");
-  const [sortType, setSortType] = useState("CTRLNO"); // 기본 정렬: 자료코드 순
+  const [sortType, setSortType] = useState(""); // 정렬 선택 상태
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
+
   const itemsPerPage = 20;
 
   useEffect(() => {
@@ -40,10 +41,11 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
           TITLE: row.getElementsByTagName("TITLE")[0]?.textContent || "제목 없음",
           AUTHOR: row.getElementsByTagName("AUTHOR")[0]?.textContent || "저자 없음",
           PUBLER: row.getElementsByTagName("PUBLER")[0]?.textContent || "출판사 없음",
-          PUBLER_YEAR: parseInt(
-            row.getElementsByTagName("PUBLER_YEAR")[0]?.textContent || "0",
-            10
-          ),
+          PUBLER_YEAR:
+            parseInt(
+              row.getElementsByTagName("PUBLER_YEAR")[0]?.textContent || "0",
+              10
+            ),
           AVAILABLE: "대여 가능",
         }));
 
@@ -65,30 +67,31 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
 
     let updatedBooks = books;
 
+    // 검색 필터 적용
     if (searchKeyword) {
       updatedBooks = updatedBooks.filter((book) =>
         book[filterType]?.toLowerCase().includes(searchKeyword.toLowerCase())
       );
     }
 
+    // 대여 가능 필터 적용
     if (showAvailableOnly) {
       updatedBooks = updatedBooks.filter(
         (book) => book.AVAILABLE === "대여 가능"
       );
     }
 
-    if (sortType === "TITLE") {
-      updatedBooks.sort((a, b) =>
-        a.TITLE.localeCompare(b.TITLE, "ko", { sensitivity: "base" })
-      );
-    } else if (sortType === "PUBLER_YEAR") {
-      updatedBooks.sort((a, b) => a.PUBLER_YEAR - b.PUBLER_YEAR);
-    } else {
+    // 정렬 적용
+    if (sortType === "TITLE_ASC") {
+      updatedBooks.sort((a, b) => a.TITLE.localeCompare(b.TITLE, "ko", { sensitivity: "base" }));
+    } else if (sortType === "CTRLNO_ASC") {
       updatedBooks.sort((a, b) => a.CTRLNO.localeCompare(b.CTRLNO, "ko", { sensitivity: "base" }));
+    } else if (sortType === "PUBLER_YEAR_ASC") {
+      updatedBooks.sort((a, b) => a.PUBLER_YEAR - b.PUBLER_YEAR);
     }
 
     setFilteredBooks(updatedBooks);
-  }, [books, searchKeyword, filterType, showAvailableOnly, sortType]);
+  }, [searchKeyword, filterType, showAvailableOnly, sortType, books]);
 
   const displayedBooks = filteredBooks.slice(
     (currentPage - 1) * itemsPerPage,
@@ -129,10 +132,12 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
           <select
             onChange={(e) => setSortType(e.target.value)}
             value={sortType}
+            style={{ marginLeft: "10px" }}
           >
-            <option value="CTRLNO">자료코드 순</option>
-            <option value="TITLE">책 제목 가나다순</option>
-            <option value="PUBLER_YEAR">출판 연도 순</option>
+            <option value="">정렬 없음</option>
+            <option value="TITLE_ASC">책 제목 가나다순</option>
+            <option value="CTRLNO_ASC">자료 코드순</option>
+            <option value="PUBLER_YEAR_ASC">출판 연도순</option>
           </select>
           <label style={{ marginLeft: "10px" }}>
             <input
@@ -151,10 +156,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
           >
             장바구니 보기
           </button>
-          <button
-            className="btn btn-secondary"
-            onClick={() => navigate("/rental")}
-          >
+          <button className="btn btn-secondary" onClick={() => navigate("/rental")}>
             대여 리스트 보기
           </button>
         </div>
@@ -215,20 +217,17 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
       </div>
 
       <div className="pagination">
-        {Array.from(
-          { length: Math.ceil(filteredBooks.length / itemsPerPage) },
-          (_, i) => i + 1
-        ).map((pageNumber) => (
-          <button
-            key={pageNumber}
-            className={`page-btn ${
-              currentPage === pageNumber ? "active" : ""
-            }`}
-            onClick={() => changePage(pageNumber)}
-          >
-            {pageNumber}
-          </button>
-        ))}
+        {Array.from({ length: Math.ceil(filteredBooks.length / itemsPerPage) }, (_, i) => i + 1).map(
+          (pageNumber) => (
+            <button
+              key={pageNumber}
+              className={`page-btn ${currentPage === pageNumber ? "active" : ""}`}
+              onClick={() => changePage(pageNumber)}
+            >
+              {pageNumber}
+            </button>
+          )
+        )}
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterType, setFilterType] = useState("TITLE");
-  const [sortType, setSortType] = useState(""); // 정렬 선택 상태
+  const [sortType, setSortType] = useState(""); 
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,6 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   const navigate = useNavigate();
   const itemsPerPage = 20;
 
-  // 데이터 패칭
   useEffect(() => {
     const fetchBooks = async () => {
       try {
@@ -62,27 +61,23 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
     fetchBooks();
   }, []);
 
-  // 검색, 필터 및 정렬 처리
   useEffect(() => {
     if (!books || books.length === 0) return;
 
     let updatedBooks = books;
 
-    // 검색 필터 적용
     if (searchKeyword) {
       updatedBooks = updatedBooks.filter((book) =>
         book[filterType]?.toLowerCase().includes(searchKeyword.toLowerCase())
       );
     }
 
-    // 대여 가능 필터 적용
     if (showAvailableOnly) {
       updatedBooks = updatedBooks.filter(
         (book) => book.AVAILABLE === "대여 가능"
       );
     }
 
-    // 정렬 적용
     if (sortType === "TITLE_ASC") {
       updatedBooks = updatedBooks.sort((a, b) =>
         a.TITLE.localeCompare(b.TITLE, "ko", { sensitivity: "base" })
@@ -95,7 +90,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
       updatedBooks = updatedBooks.sort((a, b) => a.PUBLER_YEAR - b.PUBLER_YEAR);
     }
 
-    setFilteredBooks([...updatedBooks]); // 정렬된 값을 새로운 배열로 복사하여 저장
+    setFilteredBooks([...updatedBooks]); 
   }, [books, searchKeyword, filterType, showAvailableOnly, sortType]);
 
   const displayedBooks = filteredBooks.slice(

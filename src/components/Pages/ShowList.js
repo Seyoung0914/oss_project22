@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const ShowList = () => {
-  const [books, setBooks] = useState([]); // 도서 데이터를 저장
-  const [loading, setLoading] = useState(true); // 로딩 상태
-  const [error, setError] = useState(null); // 에러 상태
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -12,21 +12,11 @@ const ShowList = () => {
         console.log("Fetching books from Serverless Function...");
         const response = await axios.get("/api/books"); // Vercel Serverless Function 호출
         console.log("API Response:", response.data);
-
-        // XML 데이터 파싱
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(response.data, "application/xml");
-        const items = Array.from(xmlDoc.getElementsByTagName("row")).map((item) => ({
-          CTRLNO: item.getElementsByTagName("CTRLNO")[0]?.textContent || "",
-          TITLE: item.getElementsByTagName("TITLE")[0]?.textContent || "",
-          AUTHOR: item.getElementsByTagName("AUTHOR")[0]?.textContent || "",
-          PUBLER: item.getElementsByTagName("PUBLER")[0]?.textContent || "",
-        }));
-
-        setBooks(items); // 데이터 저장
+        // XML을 JSON으로 변환하거나 파싱 필요
+        setBooks(response.data); // 필요 시 XML 파싱 추가
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching data from API:", err);
+        console.error("Error fetching data:", err.message);
         setError("데이터를 가져오는 중 오류가 발생했습니다.");
         setLoading(false);
       }
@@ -41,8 +31,8 @@ const ShowList = () => {
   return (
     <div className="container">
       <h1>도서 리스트</h1>
-      {books.map((book) => (
-        <div key={book.CTRLNO}>
+      {books.map((book, index) => (
+        <div key={index}>
           <h3>{book.TITLE}</h3>
           <p>저자: {book.AUTHOR}</p>
           <p>출판사: {book.PUBLER}</p>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const ShowList = ({ books, setBooks, cart, addToCart }) => {
   const [filteredBooks, setFilteredBooks] = useState([]); // 필터링된 도서
@@ -10,62 +11,68 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
   const itemsPerPage = 20; // 한 페이지에 표시할 항목 수
   const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
 
+  // 데이터 패칭
   useEffect(() => {
-    const fetchBooks = () => {
-      const xhr = new XMLHttpRequest();
-      const url =
-        "http://openapi.seoul.go.kr:8088/58624c767a63796c37386a42726a66/xml/SeoulLibraryBookSearchInfo/1/999";
+    const fetchBooks = async () => {
+      try {
+        const response = await axios.get(
+          "http://openapi.seoul.go.kr:8088/58624c767a63796c37386a42726a66/xml/SeoulLibraryBookSearchInfo/1/999"
+        );
 
-      xhr.open("GET", url);
-      xhr.onreadystatechange = function () {
-        if (this.readyState === XMLHttpRequest.DONE) {
-          if (xhr.status === 200 || xhr.status === 201) {
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(this.responseText, "application/xml");
-            const items = Array.from(xmlDoc.getElementsByTagName("row")).map((item) => ({
-              CTRLNO: item.getElementsByTagName("CTRLNO")[0]?.textContent,
-              TITLE: item.getElementsByTagName("TITLE")[0]?.textContent,
-              AUTHOR: item.getElementsByTagName("AUTHOR")[0]?.textContent,
-              PUBLER: item.getElementsByTagName("PUBLER")[0]?.textContent,
-              LANG_NAME: item.getElementsByTagName("LANG_NAME")[0]?.textContent || "기타",
-            }));
-            setBooks(items);
-            setFilteredBooks(items);
-          } else {
-            console.error("Error: Failed to fetch data", xhr.status);
-          }
-        }
-      };
-      xhr.send();
+        // XML 데이터를 JSON으로 변환
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(response.data, "application/xml");
+        const items = Array.from(xmlDoc.getElementsByTagName("row")).map((item) => ({
+          CTRLNO: item.getElementsByTagName("CTRLNO")[0]?.textContent,
+          TITLE: item.getElementsByTagName("TITLE")[0]?.textContent,
+          AUTHOR: item.getElementsByTagName("AUTHOR")[0]?.textContent,
+          PUBLER: item.getElementsByTagName("PUBLER")[0]?.textContent,
+          LANG_NAME: item.getElementsByTagName("LANG_NAME")[0]?.textContent || "기타",
+        }));
+
+        setBooks(items); // 전체 도서 리스트 설정
+        setFilteredBooks(items); // 필터링용 데이터 초기화
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
 
     fetchBooks();
   }, [setBooks]);
 
-  // 나머지 ShowList 구현은 기존 코드와 동일
+  // 필터링 및 검색 적용
   useEffect(() => {
     let updatedBooks = books;
+
+    // 검색 필터
     if (searchKeyword) {
       updatedBooks = updatedBooks.filter((book) =>
         book.TITLE.toLowerCase().includes(searchKeyword.toLowerCase())
       );
     }
+
+    // 대여 가능 필터 (장바구니에 없는 도서만 보기)
     if (showAvailableOnly) {
       updatedBooks = updatedBooks.filter(
         (book) => !cart.some((item) => item.CTRLNO === book.CTRLNO)
       );
     }
+
+    // 언어 필터
     if (languageFilter) {
       updatedBooks = updatedBooks.filter((book) => book.LANG_NAME === languageFilter);
     }
+
     setFilteredBooks(updatedBooks);
   }, [books, searchKeyword, showAvailableOnly, languageFilter, cart]);
 
+  // 현재 페이지의 도서 데이터 가져오기
   const displayedBooks = filteredBooks.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
+  // 페이지 변경
   const changePage = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
@@ -73,6 +80,8 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
   return (
     <div className="container">
       <h1>도서 리스트</h1>
+
+      {/* 검색 및 필터링 */}
       <div className="filters">
         <input
           type="text"
@@ -99,6 +108,7 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
         </label>
       </div>
 
+      {/* 도서 리스트 */}
       <div id="data-list">
         {displayedBooks.map((book) => (
           <div key={book.CTRLNO} className="book-item">
@@ -120,6 +130,7 @@ const ShowList = ({ books, setBooks, cart, addToCart }) => {
         ))}
       </div>
 
+      {/* 페이지네이션 */}
       <div className="pagination">
         {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
           <button

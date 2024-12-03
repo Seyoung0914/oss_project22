@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
     try {
-        const { start = 1, end = 200 } = req.query;
+        const { start = 1000, end = 1200 } = req.query;
         const startIndex = parseInt(start, 10);
         const endIndex = parseInt(end, 10);
 

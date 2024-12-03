@@ -8,16 +8,16 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterType, setFilterType] = useState("TITLE");
   const [sortType, setSortType] = useState("");
-  const [languageFilter, setLanguageFilter] = useState("ALL"); 
+  const [languageFilter, setLanguageFilter] = useState("ALL");
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [currentPageGroup, setCurrentPageGroup] = useState(0); 
+  const [currentPageGroup, setCurrentPageGroup] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
   const itemsPerPage = 20;
-  const pagesPerGroup = 10; 
+  const pagesPerGroup = 10;
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -49,7 +49,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
               10
             ),
           AVAILABLE: "대여 가능",
-          LANG: row.getElementsByTagName("LANG")[0]?.textContent || "N/A", 
+          LANG: row.getElementsByTagName("LANG")[0]?.textContent || "N/A",
         }));
 
         setBooks(bookArray);
@@ -219,14 +219,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
                 alignItems: "center",
               }}
             >
-              <span
-                style={{
-                  color: book.AVAILABLE === "대여 가능" ? "green" : "red",
-                }}
-              >
-                {book.AVAILABLE}
-              </span>
-              <div style={{ marginTop: "10px" }}>
+              <div style={{ marginBottom: "10px" }}>
                 <button
                   className="btn btn-warning"
                   onClick={() => addToCart(book)}
@@ -244,6 +237,13 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
                   상세보기
                 </button>
               </div>
+              <span
+                style={{
+                  color: book.AVAILABLE === "대여 가능" ? "green" : "red",
+                }}
+              >
+                {book.AVAILABLE}
+              </span>
             </div>
           </div>
         ))}
@@ -254,6 +254,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
           className="page-btn"
           onClick={() => changePageGroup("prev")}
           disabled={currentPageGroup === 0}
+          style={{ marginRight: "5px" }}
         >
           이전
         </button>
@@ -265,6 +266,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
             key={pageNumber}
             className={`page-btn ${currentPage === pageNumber ? "active" : ""}`}
             onClick={() => changePage(pageNumber)}
+            style={{ marginRight: "5px" }}
           >
             {pageNumber}
           </button>
@@ -273,6 +275,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
           className="page-btn"
           onClick={() => changePageGroup("next")}
           disabled={currentPageGroup >= totalGroups - 1}
+          style={{ marginRight: "5px" }}
         >
           다음
         </button>

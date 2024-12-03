@@ -7,14 +7,17 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterType, setFilterType] = useState("TITLE");
-  const [sortType, setSortType] = useState(""); 
+  const [sortType, setSortType] = useState("");
+  const [languageFilter, setLanguageFilter] = useState("ALL"); 
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentPageGroup, setCurrentPageGroup] = useState(0); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
   const itemsPerPage = 20;
+  const pagesPerGroup = 10; 
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -46,6 +49,7 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
               10
             ),
           AVAILABLE: "대여 가능",
+          LANG: row.getElementsByTagName("LANG")[0]?.textContent || "N/A", 
         }));
 
         setBooks(bookArray);
@@ -78,6 +82,10 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
       );
     }
 
+    if (languageFilter !== "ALL") {
+      updatedBooks = updatedBooks.filter((book) => book.LANG === languageFilter);
+    }
+
     if (sortType === "TITLE_ASC") {
       updatedBooks = updatedBooks.sort((a, b) =>
         a.TITLE.localeCompare(b.TITLE, "ko", { sensitivity: "base" })
@@ -90,15 +98,31 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
       updatedBooks = updatedBooks.sort((a, b) => a.PUBLER_YEAR - b.PUBLER_YEAR);
     }
 
-    setFilteredBooks([...updatedBooks]); 
-  }, [books, searchKeyword, filterType, showAvailableOnly, sortType]);
+    setFilteredBooks([...updatedBooks]);
+  }, [books, searchKeyword, filterType, showAvailableOnly, languageFilter, sortType]);
 
   const displayedBooks = filteredBooks.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
+  const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
+  const totalGroups = Math.ceil(totalPages / pagesPerGroup);
+
   const changePage = (pageNumber) => setCurrentPage(pageNumber);
+
+  const changePageGroup = (direction) => {
+    if (direction === "next" && currentPageGroup < totalGroups - 1) {
+      setCurrentPageGroup(currentPageGroup + 1);
+      setCurrentPage(currentPageGroup * pagesPerGroup + 1 + pagesPerGroup);
+    } else if (direction === "prev" && currentPageGroup > 0) {
+      setCurrentPageGroup(currentPageGroup - 1);
+      setCurrentPage(currentPageGroup * pagesPerGroup + 1 - pagesPerGroup);
+    }
+  };
+
+  const startPage = currentPageGroup * pagesPerGroup + 1;
+  const endPage = Math.min(startPage + pagesPerGroup - 1, totalPages);
 
   if (loading) return <p>데이터를 불러오는 중입니다...</p>;
   if (error) return <p>오류 발생: {error}</p>;
@@ -138,6 +162,15 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
             <option value="TITLE_ASC">책 제목 가나다순</option>
             <option value="CTRLNO_ASC">자료 코드순</option>
             <option value="PUBLER_YEAR_ASC">출판 연도순</option>
+          </select>
+          <select
+            onChange={(e) => setLanguageFilter(e.target.value)}
+            value={languageFilter}
+            style={{ marginLeft: "10px" }}
+          >
+            <option value="ALL">모든 언어</option>
+            <option value="kor">한국어</option>
+            <option value="eng">영어</option>
           </select>
           <label style={{ marginLeft: "10px" }}>
             <input
@@ -217,17 +250,32 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
       </div>
 
       <div className="pagination">
-        {Array.from({ length: Math.ceil(filteredBooks.length / itemsPerPage) }, (_, i) => i + 1).map(
-          (pageNumber) => (
-            <button
-              key={pageNumber}
-              className={`page-btn ${currentPage === pageNumber ? "active" : ""}`}
-              onClick={() => changePage(pageNumber)}
-            >
-              {pageNumber}
-            </button>
-          )
-        )}
+        <button
+          className="page-btn"
+          onClick={() => changePageGroup("prev")}
+          disabled={currentPageGroup === 0}
+        >
+          이전
+        </button>
+        {Array.from(
+          { length: endPage - startPage + 1 },
+          (_, i) => startPage + i
+        ).map((pageNumber) => (
+          <button
+            key={pageNumber}
+            className={`page-btn ${currentPage === pageNumber ? "active" : ""}`}
+            onClick={() => changePage(pageNumber)}
+          >
+            {pageNumber}
+          </button>
+        ))}
+        <button
+          className="page-btn"
+          onClick={() => changePageGroup("next")}
+          disabled={currentPageGroup >= totalGroups - 1}
+        >
+          다음
+        </button>
       </div>
     </div>
   );

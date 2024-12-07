@@ -117,8 +117,8 @@ const ShowList = ({ cart = [], addToCart = () => {} }) => {
   const handleAddToCart = (book) => {
     if (!cart.some((item) => item.CTRLNO === book.CTRLNO)) {
       const updatedCart = [...cart, book];
-      setCart(updatedCart);
       localStorage.setItem('cart', JSON.stringify(updatedCart)); // 로컬 스토리지에 저장
+      console.log('성공적으로 저장됌!');
       setShowModal(true); // 모달 열기
       setTimeout(() => setShowModal(false), 2000); // 2초 후 모달 자동 닫기
     }

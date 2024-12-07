@@ -46,7 +46,7 @@ const Router = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="/home" element={<ShowList cart={cart} addToCart={addToCart} />} />
+        <Route path="/home" element={<ShowList cart={cart} addToCart={addToCart} rentalList={rentalList} />} />
         <Route path="/cart" element={<CartList cart={cart} removeFromCart={removeFromCart} checkout={checkout} />} />
         <Route path="/book/:CTRLNO" element={<Detail />} />
         {/* 📘 RentalList에 대여 목록 상태 전달 */}

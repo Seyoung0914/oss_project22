@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const ShowList = ({ cart = [], addToCart = () => {}, rentalList = [], removeFromRental = () => {} }) => {
+const ShowList = ({ cart = [], addToCart = () => {}, rentalList = [] }) => {
   const [books, setBooks] = useState([]);
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -125,11 +125,6 @@ const ShowList = ({ cart = [], addToCart = () => {}, rentalList = [], removeFrom
   const startPage = currentPageGroup * pagesPerGroup + 1;
   const endPage = Math.min(startPage + pagesPerGroup - 1, totalPages);
 
-  const handleReturnBook = (book) => {
-    // 반납하기 클릭 시 대여리스트에서 책을 제거
-    removeFromRental(book);
-  };
-
   if (loading) return <p>데이터를 불러오는 중입니다...</p>;
   if (error) return <p>오류 발생: {error}</p>;
 
@@ -237,12 +232,6 @@ const ShowList = ({ cart = [], addToCart = () => {}, rentalList = [], removeFrom
               >
                 {book.AVAILABLE}
               </span>
-
-              {book.AVAILABLE === '대여 중' && (
-                <button className="btn btn-danger" onClick={() => handleReturnBook(book)} style={{ marginTop: '10px' }}>
-                  반납하기
-                </button>
-              )}
             </div>
           </div>
         ))}

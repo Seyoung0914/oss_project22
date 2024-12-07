@@ -1,19 +1,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const RentalList = ({ rentalList = [] }) => {
+const RentalList = ({ rentalList = [], removeFromRental = () => {} }) => {
   const navigate = useNavigate();
 
+  const handleReturnBook = (book) => {
+    // 반납하기 클릭 시 대여리스트에서 책을 제거
+    removeFromRental(book);
+  };
+
   if (rentalList.length === 0) {
-    return (
-      <div className="container">
-        <h1>대여 리스트</h1>
-        <p>대여한 도서가 없습니다.</p>
-        <button className="btn btn-primary" onClick={() => navigate('/home')} style={{ marginTop: '20px' }}>
-          도서 리스트로 돌아가기
-        </button>
-      </div>
-    );
+    return <p>대여한 도서가 없습니다.</p>;
   }
 
   return (
@@ -24,7 +21,7 @@ const RentalList = ({ rentalList = [] }) => {
         {rentalList.map((book) => (
           <div
             key={book.CTRLNO}
-            className="rental-item"
+            className="book-item"
             style={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -44,22 +41,21 @@ const RentalList = ({ rentalList = [] }) => {
                 alignItems: 'center',
               }}
             >
+              <div style={{ marginBottom: '10px' }}>
+                <button className="btn btn-danger" onClick={() => handleReturnBook(book)} style={{ marginTop: '10px' }}>
+                  반납하기
+                </button>
+              </div>
               <span
                 style={{
-                  color: 'green',
+                  color: book.AVAILABLE === '대여 가능' ? 'green' : 'red',
                 }}
               >
-                대여 중
+                {book.AVAILABLE}
               </span>
             </div>
           </div>
         ))}
-      </div>
-
-      <div className="rental-actions" style={{ marginTop: '20px' }}>
-        <button className="btn btn-secondary" onClick={() => navigate('/home')}>
-          도서 리스트로 돌아가기
-        </button>
       </div>
     </div>
   );

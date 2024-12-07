@@ -6,8 +6,9 @@ import Detail from './Pages/Detail.js';
 import RentalList from './Pages/RentalList.js';
 
 const Router = () => {
-  const [cart, setCart] = useState([]); // 장바구니 상태
-  const [rentalList, setRentalList] = useState([]); // 대여 목록 상태 (수정 부분)
+  const [cart, setCart] = useState([]);
+  const [books, setBooks] = useState([]); // 전체 도서 목록
+  const [rentalList, setRentalList] = useState([]); // 대여 목록
 
   // 장바구니에 도서 추가하는 함수
   const addToCart = (book) => {
@@ -25,32 +26,27 @@ const Router = () => {
 
   // 장바구니 전체 대여 완료
   const checkout = () => {
-    if (cart.length === 0) {
-      alert('장바구니가 비어 있습니다.');
-      return;
-    }
+    alert('도서가 대여되었습니다.');
+    setCart([]); // 장바구니 비우기
+  };
 
-    try {
-      // 🆕 장바구니의 모든 도서를 대여 목록에 추가
-      setRentalList([...rentalList, ...cart]);
+  // 대여리스트에서 도서 반납
+  const removeFromRental = (book) => {
+    // 대여리스트에서 책을 제거
+    setRentalList(rentalList.filter((rentalBook) => rentalBook.CTRLNO !== book.CTRLNO));
 
-      alert('도서가 대여되었습니다.');
-      setCart([]); // 장바구니 초기화
-    } catch (error) {
-      console.error('대여 실패:', error);
-      alert('대여에 실패했습니다.');
-    }
+    // books 배열에서 해당 책의 AVAILABLE을 '대여 가능'으로 변경
+    setBooks(books.map((b) => (b.CTRLNO === book.CTRLNO ? { ...b, AVAILABLE: '대여 가능' } : b)));
   };
 
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="/home" element={<ShowList cart={cart} addToCart={addToCart} rentalList={rentalList} />} />
+        <Route path="/home" element={<ShowList books={books} addToCart={addToCart} rentalList={rentalList} />} />
         <Route path="/cart" element={<CartList cart={cart} removeFromCart={removeFromCart} checkout={checkout} />} />
         <Route path="/book/:CTRLNO" element={<Detail />} />
-        {/* 📘 RentalList에 대여 목록 상태 전달 */}
-        <Route path="/rental" element={<RentalList rentalList={rentalList} />} />
+        <Route path="/rental" element={<RentalList rentalList={rentalList} removeFromRental={removeFromRental} />} />
       </Routes>
     </BrowserRouter>
   );

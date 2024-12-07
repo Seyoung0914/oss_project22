@@ -1,40 +1,62 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-function RentalList({ rentalBooks, setRentalBooks }) {
-  const handleReturn = (id) => {
-    setRentalBooks(rentalBooks.filter((book) => book.CTRLNO !== id));
+const Rental = () => {
+  const [rentalList, setRentalList] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // localStorage에서 대여 리스트 불러오기
+    const storedRentalList = localStorage.getItem('rentalList');
+    if (storedRentalList) {
+      setRentalList(JSON.parse(storedRentalList));
+    }
+  }, []);
+
+  // 도서 반납 함수
+  const handleReturnBook = (ctrlno) => {
+    const updatedRentalList = rentalList.filter((book) => book.CTRLNO !== ctrlno);
+    setRentalList(updatedRentalList);
+    localStorage.setItem('rentalList', JSON.stringify(updatedRentalList));
   };
+
+  if (rentalList.length === 0) {
+    return <p>대여 중인 도서가 없습니다.</p>;
+  }
 
   return (
     <div className="container">
-      <h2>대여 중인 도서 목록</h2>
-      {rentalBooks.length > 0 ? (
-        <ul className="list-group">
-          {rentalBooks.map((book) => (
-            <li className="list-group-item d-flex justify-content-between align-items-center" key={book.CTRLNO}>
-              <div>
-                <strong>{book.TITLE}</strong> by {book.AUTHOR}
-              </div>
-              <div>
-                <button className="btn btn-danger btn-sm" onClick={() => handleReturn(book.CTRLNO)}>
-                  반납
-                </button>
-                <Link to={`/book/${book.CTRLNO}`} className="btn btn-primary btn-sm ms-2">
-                  상세보기
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>대여 중인 도서가 없습니다.</p>
-      )}
-      <Link to="/home" className="btn btn-secondary mt-3">
-        도서 리스트로 돌아가기
-      </Link>
+      <h1>대여한 도서 목록</h1>
+      <div>
+        {rentalList.map((book) => (
+          <div
+            key={book.CTRLNO}
+            className="book-item"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              borderBottom: '1px solid #ccc',
+              padding: '10px 0',
+            }}
+          >
+            <div>
+              <strong>{book.TITLE}</strong>
+              <p>{`${book.AUTHOR} / ${book.PUBLER}`}</p>
+            </div>
+            <div>
+              <button className="btn btn-danger" onClick={() => handleReturnBook(book.CTRLNO)}>
+                반납
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button className="btn btn-primary" onClick={() => navigate('/')} style={{ marginTop: '20px' }}>
+        도서 목록으로 돌아가기
+      </button>
     </div>
   );
-}
+};
 
-export default RentalList;
+export default Rental;

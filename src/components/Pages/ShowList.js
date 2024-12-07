@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const ShowList = ({ cart = [], addToCart = () => {}, rentalList = [] }) => {
+const ShowList = ({ cart = [], addToCart = () => {}, rentalList = [], removeFromRental = () => {} }) => {
   const [books, setBooks] = useState([]);
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -61,19 +61,19 @@ const ShowList = ({ cart = [], addToCart = () => {}, rentalList = [] }) => {
 
   useEffect(() => {
     // rentalList에 있는 도서들의 CTRLNO에 해당하는 도서를 '대여 중'으로 업데이트
-    if (!books || books.length === 0) return;
+    if (books && books.length > 0 && rentalList.length > 0) {
+      const updatedBooks = books.map((book) => {
+        // rentalList에서 대여 중인 책을 찾은 경우
+        if (rentalList.some((rental) => rental.CTRLNO === book.CTRLNO)) {
+          return { ...book, AVAILABLE: '대여 중' };
+        }
+        return book;
+      });
 
-    let updatedBooks = [...books];
-
-    updatedBooks = updatedBooks.map((book) => {
-      if (rentalList.some((rental) => rental.CTRLNO === book.CTRLNO)) {
-        return { ...book, AVAILABLE: '대여 중' };
-      }
-      return book;
-    });
-
-    setBooks(updatedBooks);
-  }, [rentalList, books]);
+      // 상태 업데이트
+      setBooks(updatedBooks);
+    }
+  }, [rentalList]); // rentalList가 변경될 때마다 실행
 
   useEffect(() => {
     if (!books || books.length === 0) return;
@@ -124,6 +124,11 @@ const ShowList = ({ cart = [], addToCart = () => {}, rentalList = [] }) => {
 
   const startPage = currentPageGroup * pagesPerGroup + 1;
   const endPage = Math.min(startPage + pagesPerGroup - 1, totalPages);
+
+  const handleReturnBook = (book) => {
+    // 반납하기 클릭 시 대여리스트에서 책을 제거
+    removeFromRental(book);
+  };
 
   if (loading) return <p>데이터를 불러오는 중입니다...</p>;
   if (error) return <p>오류 발생: {error}</p>;
@@ -232,6 +237,12 @@ const ShowList = ({ cart = [], addToCart = () => {}, rentalList = [] }) => {
               >
                 {book.AVAILABLE}
               </span>
+
+              {book.AVAILABLE === '대여 중' && (
+                <button className="btn btn-danger" onClick={() => handleReturnBook(book)} style={{ marginTop: '10px' }}>
+                  반납하기
+                </button>
+              )}
             </div>
           </div>
         ))}

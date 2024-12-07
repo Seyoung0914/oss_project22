@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
-function Rental({ rentalBooks, setRentalBooks }) {
-  // 반납 기능: 대여 목록에서 도서를 삭제
+function RentalList({ rentalBooks, setRentalBooks }) {
   const handleReturn = (id) => {
-    setRentalBooks(rentalBooks.filter((book) => book.id !== id));
+    setRentalBooks(rentalBooks.filter((book) => book.CTRLNO !== id));
   };
 
   return (
@@ -13,15 +12,15 @@ function Rental({ rentalBooks, setRentalBooks }) {
       {rentalBooks.length > 0 ? (
         <ul className="list-group">
           {rentalBooks.map((book) => (
-            <li className="list-group-item d-flex justify-content-between align-items-center" key={book.id}>
+            <li className="list-group-item d-flex justify-content-between align-items-center" key={book.CTRLNO}>
               <div>
-                <strong>{book.title}</strong> by {book.author}
+                <strong>{book.TITLE}</strong> by {book.AUTHOR}
               </div>
               <div>
-                <button className="btn btn-danger btn-sm" onClick={() => handleReturn(book.id)}>
+                <button className="btn btn-danger btn-sm" onClick={() => handleReturn(book.CTRLNO)}>
                   반납
                 </button>
-                <Link to={`/book/${book.id}`} className="btn btn-primary btn-sm ms-2">
+                <Link to={`/book/${book.CTRLNO}`} className="btn btn-primary btn-sm ms-2">
                   상세보기
                 </Link>
               </div>
@@ -38,4 +37,4 @@ function Rental({ rentalBooks, setRentalBooks }) {
   );
 }
 
-export default Rental;
+export default RentalList;

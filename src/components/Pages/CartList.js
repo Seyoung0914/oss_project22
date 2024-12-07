@@ -2,12 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 function CartList({ cartBooks, setCartBooks, rentalBooks, setRentalBooks }) {
-  // 장바구니에서 도서 삭제
   const handleRemoveFromCart = (id) => {
-    setCartBooks(cartBooks.filter((book) => book.id !== id));
+    setCartBooks(cartBooks.filter((book) => book.CTRLNO !== id));
   };
 
-  // "대여하기" 기능: 장바구니 도서를 대여 목록으로 이동
   const handleRentBooks = () => {
     const updatedRentalBooks = [...rentalBooks, ...cartBooks];
     setRentalBooks(updatedRentalBooks);
@@ -20,11 +18,11 @@ function CartList({ cartBooks, setCartBooks, rentalBooks, setRentalBooks }) {
       {cartBooks.length > 0 ? (
         <ul className="list-group">
           {cartBooks.map((book) => (
-            <li className="list-group-item d-flex justify-content-between align-items-center" key={book.id}>
+            <li className="list-group-item d-flex justify-content-between align-items-center" key={book.CTRLNO}>
               <div>
-                <strong>{book.title}</strong> by {book.author}
+                <strong>{book.TITLE}</strong> by {book.AUTHOR}
               </div>
-              <button className="btn btn-danger btn-sm" onClick={() => handleRemoveFromCart(book.id)}>
+              <button className="btn btn-danger btn-sm" onClick={() => handleRemoveFromCart(book.CTRLNO)}>
                 삭제
               </button>
             </li>
